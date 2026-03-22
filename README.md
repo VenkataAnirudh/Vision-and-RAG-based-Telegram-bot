@@ -1,4 +1,3 @@
-```markdown
 # Multimodal Trading RAG & Vision Telegram Bot
 
 A local, privacy-focused Telegram bot that acts as a trading assistant. The system utilizes a Retrieval-Augmented Generation (RAG) pipeline to answer queries based on local PDF documents and a local Vision-Language Model (VLM) to analyze and describe uploaded images. All AI processing executes entirely on the host machine.
@@ -99,4 +98,3 @@ When uploading an image to the bot via Telegram, **the user must send it as a st
 1. Tap the attachment icon.
 2. Select the image from the gallery.
 3. Tap Send directly.
-```
