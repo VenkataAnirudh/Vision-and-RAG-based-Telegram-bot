@@ -1,0 +1,12 @@
+python-telegram-bot==21.0.1
+PyPDF2==3.0.1
+sentence-transformers==2.5.1
+sqlite-vec==0.1.1
+ollama==0.1.7
+transformers==4.44.2
+torch
+torchvision
+pillow
+numpy<2.0
+einops
+python-dotenv

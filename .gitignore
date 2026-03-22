@@ -1,0 +1,16 @@
+# Security
+.env
+
+# Virtual Environment
+venv/
+
+# Database and PDFs
+rag.db
+NIFTY_50/
+
+# Temporary Image Files
+temp*.jpg
+
+# Python Cache
+__pycache__/
+*.pyc
