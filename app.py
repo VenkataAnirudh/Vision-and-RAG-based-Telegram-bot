@@ -68,7 +68,7 @@ def get_main_menu():
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Triggers the custom keyboard and hides the typing bar."""
     await update.message.reply_text(
-        "Trading Bot Online 📈\nSelect an option below:",
+        "RAG and Vision Bot Online \nSelect an option below:",
         reply_markup=get_main_menu()
     )
     return ConversationHandler.END
