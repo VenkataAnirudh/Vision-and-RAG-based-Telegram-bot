@@ -12,7 +12,7 @@ A fully **local, privacy-first** Telegram bot that answers questions from your o
 2. [System Architecture](#system-architecture)
 3. [Prerequisites](#prerequisites)
 4. [Project Structure](#project-structure)
-5. [Setup - Step by Step](#setup--step-by-step)
+5. [Setup - Step by Step](#setup---step-by-step)
 6. [First-Time Download Warnings](#first-time-download-warnings)
 7. [Commands & Usage](#commands--usage)
 8. [Critical Catches](#critical-catches)
