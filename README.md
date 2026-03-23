@@ -1,6 +1,6 @@
 # Multimodal RAG + Vision Telegram Bot
 
-A fully **local, privacy-first** Telegram bot that answers questions from your own PDF documents and analyses uploaded images — with zero cloud AI calls. All inference runs on your own machine.
+A fully **local, privacy-first** Telegram bot that answers questions from your own PDF documents and analyses uploaded images with zero cloud AI calls. All inference runs on your own machine.
 
 > Built with: `sqlite-vec` · `sentence-transformers` · `Ollama / phi3` · `moondream2` · `python-telegram-bot`
 
@@ -12,7 +12,7 @@ A fully **local, privacy-first** Telegram bot that answers questions from your o
 2. [System Architecture](#system-architecture)
 3. [Prerequisites](#prerequisites)
 4. [Project Structure](#project-structure)
-5. [Setup — Step by Step](#setup--step-by-step)
+5. [Setup: Step by Step](#setup--step-by-step)
 6. [First-Time Download Warnings](#first-time-download-warnings)
 7. [Commands & Usage](#commands--usage)
 8. [Critical Catches](#critical-catches)
@@ -31,7 +31,7 @@ A fully **local, privacy-first** Telegram bot that answers questions from your o
 **Documents currently loaded** (from the `Documents/` folder):
 - `The-Complete-Guide-to-Trading.pdf`
 - `F1_Rulebook.pdf`
-- `Recipes.pdf` (Manjula's Kitchen — Indian Vegetarian)
+- `Recipes.pdf` (Manjula's Kitchen - Indian Vegetarian)
 
 ---
 
@@ -130,18 +130,18 @@ Doc Image Helper/
 
 ---
 
-## Setup — Step by Step
+## Setup: Step by Step
 
 Follow these steps **in order**. Do not skip any.
 
-### Step 1 — Clone the repository
+### Step 1 - Clone the repository
 
 ```bash
 git clone <repository-url>
 cd "Doc Image Helper"
 ```
 
-### Step 2 — Create and activate a virtual environment
+### Step 2 - Create and activate a virtual environment
 
 ```bash
 python -m venv venv
@@ -177,18 +177,18 @@ pip install torch torchvision --index-url https://download.pytorch.org/whl/cu118
 
 To check which CUDA version your GPU supports: `nvidia-smi` (look at the top-right corner of the output).
 
-### Step 4 — Install all Python dependencies
+### Step 4 - Install all Python dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
 This installs all packages. Expected install time: 2–5 minutes.  
-It does **not** download the vision model — that happens on first use (see [First-Time Download Warnings](#first-time-download-warnings)).
+It does **not** download the vision model - that happens on first use (see [First-Time Download Warnings](#first-time-download-warnings)).
 
 > **numpy must stay below version 2.0.** The `requirements.txt` enforces this with `numpy<2.0`. Do not manually upgrade numpy.
 
-### Step 5 — Create your `.env` file
+### Step 5 - Create your `.env` file
 
 Create a file named `.env` in the project root with the following content:
 
@@ -199,7 +199,7 @@ TELEGRAM_BOT_TOKEN=paste_your_bot_token_here
 Replace `paste_your_bot_token_here` with the token you got from `@BotFather`.  
 Do not add quotes around the token.
 
-### Step 6 — Add your documents and build the vector database
+### Step 6 - Add your documents and build the vector database
 
 1. Create the `Documents/` folder inside the project root if it does not exist:
    ```bash
@@ -222,7 +222,7 @@ Database generated successfully at rag.db
 > **Every time you add, remove, or replace PDFs in `Documents/`, you must re-run `ingest.py` to rebuild `rag.db`.**  
 > The old `rag.db` is automatically deleted and rebuilt from scratch each time.
 
-### Step 7 — Make sure Ollama is running with phi3
+### Step 7  Make sure Ollama is running with phi3
 
 In a separate terminal (or check your system tray on Windows):
 ```bash
