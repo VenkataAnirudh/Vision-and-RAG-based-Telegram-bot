@@ -336,7 +336,7 @@ ollama list
 ```
 If phi3 is not listed: `ollama pull phi3`
 
-### 🟡 Image must be sent as a compressed photo, not a file
+### Image must be sent as a compressed photo, not a file
 
 When using `/image`, you **must** send the image as a standard Telegram photo:
 - ✅ Tap the 📎 attachment icon → **Gallery/Photos** → select → **Send**
