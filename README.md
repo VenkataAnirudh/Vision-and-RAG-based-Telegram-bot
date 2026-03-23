@@ -1,100 +1,382 @@
-# Multimodal RAG & Vision Telegram Bot
+# Multimodal RAG + Vision Telegram Bot
 
-A local, privacy-focused Telegram bot that acts as a trading assistant. The system utilizes a Retrieval-Augmented Generation (RAG) pipeline to answer queries based on local PDF documents and a local Vision-Language Model (VLM) to analyze and describe uploaded images. All AI processing executes entirely on the host machine.
+A fully **local, privacy-first** Telegram bot that answers questions from your own PDF documents and analyses uploaded images — with zero cloud AI calls. All inference runs on your own machine.
 
-## System Design
+> Built with: `sqlite-vec` · `sentence-transformers` · `Ollama / phi3` · `moondream2` · `python-telegram-bot`
 
-![System Architecture Diagram](image.png)
+---
+
+## Table of Contents
+
+1. [What It Does](#what-it-does)
+2. [System Architecture](#system-architecture)
+3. [Prerequisites](#prerequisites)
+4. [Project Structure](#project-structure)
+5. [Setup — Step by Step](#setup--step-by-step)
+6. [First-Time Download Warnings](#first-time-download-warnings)
+7. [Commands & Usage](#commands--usage)
+8. [Critical Catches & Known Gotchas](#critical-catches--known-gotchas)
+9. [Troubleshooting](#troubleshooting)
+
+---
+
+## What It Does
+
+| Feature | How it works |
+|---|---|
+| `/ask` | Searches your PDF documents using vector similarity, then answers using only what's in those documents (RAG). Off-topic questions are blocked. |
+| `/image` | Accepts a photo and returns a one-sentence description + 3 keyword tags using the moondream2 vision model, running entirely locally. |
+| `/summarize` | Summarises the last 6 turns of your conversation using phi3 via Ollama. |
+
+**Documents currently loaded** (from the `Documents/` folder):
+- `The-Complete-Guide-to-Trading.pdf`
+- `F1_Rulebook.pdf`
+- `Recipes.pdf` (Manjula's Kitchen — Indian Vegetarian)
+
+---
+
+## System Architecture
+
+```
+Telegram User
+      │
+      ▼
+python-telegram-bot (app.py)
+      │
+      ├─── /ask ──► sentence-transformers (embed query)
+      │                     │
+      │             sqlite-vec (vector search → rag.db)
+      │                     │
+      │             Ollama / phi3 (answer from context only)
+      │
+      ├─── /image ──► moondream2 (local vision model, ~3.85 GB)
+      │                     │
+      │             PIL (image pre-processing)
+      │
+      └─── /summarize ──► Ollama / phi3
+```
+
+**ingest.py** (run once, before starting the bot):
+```
+Documents/*.pdf
+      │
+      ▼
+PyPDF2 (extract text)
+      │
+      ▼
+sentence-transformers / all-MiniLM-L6-v2 (embed chunks)
+      │
+      ▼
+sqlite-vec → rag.db
+```
+
+---
 
 ## Prerequisites
 
-The host system must have the following installed:
-1. **Python 3.10+**
-2. **Git**
-3. **Ollama:** Download from [ollama.com](https://ollama.com/).
-4. **Nvidia GPU (Recommended):** Required for hardware acceleration using CUDA.
+Install these **before** doing anything else.
 
-## Setup Instructions
+### 1. Python 3.10 or higher
+Download from [python.org](https://www.python.org/downloads/).  
+Verify: `python --version`
 
-### Step 1: Install and Configure Ollama
-Ollama serves as the local LLM engine for the RAG pipeline.
-1. Install Ollama on the host machine.
-2. Open a terminal or command prompt.
-3. Download the Phi-3 model:
+### 2. Git
+Download from [git-scm.com](https://git-scm.com/).
+
+### 3. Ollama
+Ollama is the local LLM runtime that serves the `phi3` model.
+
+1. Download from [ollama.com](https://ollama.com/) and install it.
+2. Open a terminal and pull the model (one-time, ~2.3 GB download):
    ```bash
    ollama pull phi3
    ```
-4. Ensure Ollama remains running in the background.
+3. Keep Ollama **running in the background** whenever you use the bot.  
+   On Windows it runs as a system tray icon after install.  
+   Verify it is running: `ollama list` — you should see `phi3` listed.
 
-### Step 2: Clone the Repository
-Download the project source code to the local machine.
+### 4. A Telegram Bot Token
+1. Open Telegram and message `@BotFather`.
+2. Send `/newbot` and follow the prompts.
+3. Copy the token — you will need it in Step 5 below.
+
+### 5. (Optional) NVIDIA GPU
+Not required — everything runs on CPU. But inference is significantly faster with a CUDA-capable GPU.  
+If you have one, see the **PyTorch CUDA install note** in Step 4 of the setup below.
+
+---
+
+## Project Structure
+
+```
+Doc Image Helper/
+├── Documents/                  ← Put your PDF files here (required before ingest)
+│   ├── The-Complete-Guide-to-Trading.pdf
+│   ├── F1_Rulebook.pdf
+│   └── Recipes.pdf
+│
+├── venv/                       ← Python virtual environment (created during setup)
+├── app.py                      ← Main bot — run this to start the bot
+├── ingest.py                   ← PDF ingestion script — run once to build rag.db
+├── rag.db                      ← Auto-generated vector database (do not edit)
+├── requirements.txt            ← All Python dependencies
+├── .env                        ← Your Telegram token (created during setup)
+├── .env.example                ← Template for .env
+└── .gitignore
+```
+
+> **The `Documents/` folder must exist and contain at least one PDF before you run `ingest.py`.**  
+> `rag.db` is auto-generated by `ingest.py` and must be regenerated every time you add or change PDFs.
+
+---
+
+## Setup — Step by Step
+
+Follow these steps **in order**. Do not skip any.
+
+### Step 1 — Clone the repository
+
 ```bash
 git clone <repository-url>
 cd "Doc Image Helper"
 ```
 
-### Step 3: Initialize the Python Environment
-Create an isolated virtual environment to manage dependencies.
+### Step 2 — Create and activate a virtual environment
+
 ```bash
 python -m venv venv
 ```
-Activate the virtual environment:
-* **Windows:**
-  ```cmd
-  venv\Scripts\activate
-  ```
-* **Mac/Linux:**
-  ```bash
-  source venv/bin/activate
-  ```
 
-### Step 4: Install Dependencies
-To enable hardware acceleration on Nvidia GPUs, the CUDA-specific version of PyTorch must be installed before the general requirements.
+**Activate it:**
 
-1. **Install PyTorch with CUDA 12.1 support (Windows):**
-   ```cmd
-   pip install torch torchvision torchaudio --index-url [https://download.pytorch.org/whl/cu121](https://download.pytorch.org/whl/cu121)
+| Platform | Command |
+|---|---|
+| Windows (CMD) | `venv\Scripts\activate` |
+| Windows (PowerShell) | `venv\Scripts\Activate.ps1` |
+| macOS / Linux | `source venv/bin/activate` |
+
+You should see `(venv)` at the start of your terminal prompt.
+
+> **Always activate the venv before running any command in this project.**
+
+### Step 3 — (GPU users only) Install PyTorch with CUDA support
+
+> Skip this step if you are using CPU only.
+
+Install the correct PyTorch wheel for your CUDA version **before** installing the rest of the requirements. If you install requirements first, PyTorch will install as CPU-only and you will have to reinstall.
+
+**CUDA 12.1** (most common on modern NVIDIA GPUs):
+```bash
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+```
+
+**CUDA 11.8:**
+```bash
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu118
+```
+
+To check which CUDA version your GPU supports: `nvidia-smi` (look at the top-right corner of the output).
+
+### Step 4 — Install all Python dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+This installs all packages. Expected install time: 2–5 minutes.  
+It does **not** download the vision model — that happens on first use (see [First-Time Download Warnings](#first-time-download-warnings)).
+
+> **numpy must stay below version 2.0.** The `requirements.txt` enforces this with `numpy<2.0`. Do not manually upgrade numpy.
+
+### Step 5 — Create your `.env` file
+
+Create a file named `.env` in the project root with the following content:
+
+```
+TELEGRAM_BOT_TOKEN=paste_your_bot_token_here
+```
+
+Replace `paste_your_bot_token_here` with the token you got from `@BotFather`.  
+Do not add quotes around the token.
+
+### Step 6 — Add your documents and build the vector database
+
+1. Create the `Documents/` folder inside the project root if it does not exist:
+   ```bash
+   mkdir Documents
    ```
-2. **Install remaining dependencies:**
-   ```cmd
-   pip install -r requirements.txt
-   ```
-
-### Step 5: Configure the Telegram API Token
-1. Obtain a Bot API Token from **@BotFather** on Telegram.
-2. In the root directory, create a `.env` file (or copy the provided `.env.example` file).
-3. Insert the token into the `.env` file using the following format:
-   ```text
-   TELEGRAM_BOT_TOKEN=insert_actual_token_here
-   ```
-
-### Step 6: Build the Vector Database
-The system requires source documents to populate the RAG pipeline.
-1. Create a directory named `NIFTY_50` within the project root.
-2. Place target trading PDFs into the `NIFTY_50` directory.
-3. Execute the ingestion script to chunk the text, generate embeddings, and build the local SQLite database (`rag.db`):
+2. Copy your PDF files into the `Documents/` folder.
+3. Run the ingestion script:
    ```bash
    python ingest.py
    ```
 
-### Step 7: Launch the Application
-Start the main bot process:
+Expected output:
+```
+Extracted 312 chunks from The-Complete-Guide-to-Trading.pdf
+Extracted 87 chunks from F1_Rulebook.pdf
+Extracted 204 chunks from Recipes.pdf
+Database generated successfully at rag.db
+```
+
+> **Every time you add, remove, or replace PDFs in `Documents/`, you must re-run `ingest.py` to rebuild `rag.db`.**  
+> The old `rag.db` is automatically deleted and rebuilt from scratch each time.
+
+### Step 7 — Make sure Ollama is running with phi3
+
+In a separate terminal (or check your system tray on Windows):
+```bash
+ollama list
+```
+You must see `phi3` in the list. If not, run `ollama pull phi3` first.
+
+### Step 8 — Start the bot
+
 ```bash
 python app.py
 ```
-*Note: During the initial execution, the script automatically downloads the Moondream2 vision model weights (~3.7GB) to the local cache. Subsequent executions will bypass this download.*
 
-## Usage & Commands
+Expected startup output:
+```
+Hardware computing device: CPU (12 threads)
+Loading embedding model...
+Embedding model ready.
+Bot is live!
+```
 
-Users interact with the bot via a persistent Telegram keyboard menu or standard text commands.
+The bot is now running. Open Telegram and message it `/start`.
 
-* `/start` or `/help` - Displays the main navigation menu.
-* `/ask` - Prompts the user for a text query. The system searches the local database and returns an answer citing source documents.
-* `/summarize` - Generates a summary of the user's last three interactions.
-* `/image` - Prompts the user to upload an image for visual analysis.
+---
 
-### ⚠️ Critical Note on Image Uploads
-When uploading an image to the bot via Telegram, **the user must send it as a standard compressed photo.** Do not upload the image as an uncompressed "File" or "Document". Sending uncompressed files bypasses standard image handling and causes the Telegram API download request to fail. 
-1. Tap the attachment icon.
-2. Select the image from the gallery.
-3. Tap Send directly.
+## First-Time Download Warnings
+
+These downloads happen automatically — but only on the **first run**. After that, they are cached locally.
+
+| Model | Size | When it downloads | Cache location |
+|---|---|---|---|
+| `all-MiniLM-L6-v2` (embedding) | ~90 MB | On first `python app.py` or `python ingest.py` | `~/.cache/huggingface/` |
+| `phi3` (LLM via Ollama) | ~2.3 GB | When you run `ollama pull phi3` | Ollama's model store |
+| `moondream2` (vision) | **~3.85 GB** | On your **first `/image` command** in Telegram | `~/.cache/huggingface/` |
+
+### moondream2 vision model — critical notice
+
+- The 3.85 GB download happens **inside the bot process**, triggered by your first `/image` command.
+- On a typical home connection this takes **20–40 minutes**.
+- The bot will appear frozen/unresponsive during the download. **This is normal.** Do not restart it.
+- You will see a progress bar in the terminal:
+  ```
+  Lazy-loading vision model (first /image call)...
+  model.safetensors:   2%|██                | 67.1M/3.85G [00:55<00:11, 336MB/s]
+  ```
+- Once it says `Vision model ready.` the download is complete and will **never happen again**.
+- All subsequent `/image` calls load from local cache in seconds.
+
+---
+
+## Commands & Usage
+
+| Command | What to do |
+|---|---|
+| `/start` | Displays the main menu with buttons. |
+| `/ask` | Bot asks for your question. Type it and send. The bot searches the loaded PDFs and answers using only what is in the documents. Off-topic questions are rejected. |
+| `/image` | Bot asks you to upload an image. **Send it as a regular compressed photo** (tap the photo icon → select from gallery → tap Send). Do NOT send it as a File/Document. |
+| `/summarize` | Summarises the last 6 turns of your conversation. |
+| `/cancel` | Cancels the current operation and returns to the main menu. |
+
+---
+
+## Critical Catches
+
+Read every point here before reporting a bug.
+
+### Vision model — must use the `moondream` pip package
+
+moondream2 **broke its HuggingFace `transformers` API** in late 2024. If your `app.py` contains:
+```python
+from transformers import AutoModelForCausalLM, AutoTokenizer
+```
+and uses `encode_image()` / `answer_question()` — it will crash. The correct code uses:
+```python
+import moondream as md
+# ...
+_vision_model = md.vl(model="vikhyatk/moondream2")
+image = Image.open(image_path).convert("RGB")
+caption = vision_model.caption(image)["caption"]
+tags    = vision_model.query(image, "List 3 keywords...")["answer"]
+```
+
+### Do not pin the moondream2 revision
+
+The old pattern `revision="2024-08-26"` in `AutoModelForCausalLM.from_pretrained()` is what causes the tokenizer crash:
+```
+Exception: data did not match any variant of untagged enum ModelWrapper
+```
+The `moondream` pip package handles versioning internally — no revision pin needed.
+
+### `low_cpu_mem_usage=True` requires `accelerate`
+
+If you see:
+```
+ImportError: Using `low_cpu_mem_usage=True` requires Accelerate
+```
+Remove the `low_cpu_mem_usage=True` argument from `from_pretrained()`. The `moondream` package handles memory loading internally, so this flag is not needed at all.
+
+### numpy must stay below 2.0
+
+`sentence-transformers==2.5.1` is incompatible with numpy 2.x. If you see errors about numpy dtypes or array interfaces, run:
+```bash
+pip install "numpy<2.0"
+```
+
+### Ollama must be running before starting app.py
+
+If the bot starts but `/ask` always fails, check that Ollama is running:
+```bash
+ollama list
+```
+If phi3 is not listed: `ollama pull phi3`
+
+### 🟡 Image must be sent as a compressed photo, not a file
+
+When using `/image`, you **must** send the image as a standard Telegram photo:
+- ✅ Tap the 📎 attachment icon → **Gallery/Photos** → select → **Send**
+- ❌ Do NOT tap **File** — Telegram will send it as a Document, which bypasses photo handling and causes a download error
+
+### rag.db is stale after adding new PDFs
+
+If you add a new PDF to `Documents/` and the bot doesn't know about it, you forgot to re-run:
+```bash
+python ingest.py
+```
+This deletes the old `rag.db` and rebuilds it from scratch.
+
+### Bot does not answer general knowledge questions
+
+This is intentional. The RAG pipeline rejects queries where the vector similarity distance is too high (no matching content in your documents). The bot will reply:
+```
+❌ No relevant info found.
+📄 I can help with: Recipes, F1 Rulebook, and Trading
+```
+If a legitimate question from your documents is being rejected, you can raise `MAX_DISTANCE` in `app.py` (default: `1.25`). Higher = more permissive. Lower = stricter.
+
+### Temp image files
+
+During `/image` processing, a file named `temp_<user_id>.jpg` is created in the project root. It is always deleted after processing, including when errors occur. If you see one lingering after a crash, it is safe to delete manually.
+
+---
+
+## Troubleshooting
+
+| Error | Cause | Fix |
+|---|---|---|
+| `ValueError: No token found` | `.env` file missing or token not set | Create `.env` with `TELEGRAM_BOT_TOKEN=your_token` |
+| `ImportError: low_cpu_mem_usage requires Accelerate` | Old `from_pretrained` argument | Remove `low_cpu_mem_usage=True` from the model load call |
+| `AttributeError: module 'moondream' has no attribute 'Image'` | Incorrect image loading API | Use `Image.open(path).convert("RGB")` from PIL, not `md.Image` |
+| `Exception: data did not match any variant of untagged enum ModelWrapper` | Old transformers path for moondream2 | Switch to the `moondream` pip package (see Critical Catches above) |
+| `ConnectionError` on `/ask` or `/summarize` | Ollama is not running | Start Ollama, verify with `ollama list` |
+| `No relevant info found` for a valid question | `MAX_DISTANCE` threshold too strict or rag.db is outdated | Re-run `ingest.py`; or raise `MAX_DISTANCE` in `app.py` |
+| Vision model stuck at `2%` for 30+ minutes | Normal — first-time 3.85 GB download | Wait. Do not restart. |
+| `numpy` dtype errors | numpy 2.x installed | `pip install "numpy<2.0"` |
+| Bot ignores messages after `/ask` or `/image` | ConversationHandler state issue from a previous crash | Send `/cancel` and try again |
+
+---
