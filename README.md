@@ -15,7 +15,7 @@ A fully **local, privacy-first** Telegram bot that answers questions from your o
 5. [Setup — Step by Step](#setup--step-by-step)
 6. [First-Time Download Warnings](#first-time-download-warnings)
 7. [Commands & Usage](#commands--usage)
-8. [Critical Catches & Known Gotchas](#critical-catches--known-gotchas)
+8. [Critical Catches](#critical-catches)
 9. [Troubleshooting](#troubleshooting)
 
 ---
