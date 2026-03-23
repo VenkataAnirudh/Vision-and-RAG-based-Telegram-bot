@@ -6,24 +6,20 @@ from PyPDF2 import PdfReader
 from sentence_transformers import SentenceTransformer
 import warnings
 
-# Suppress the huggingface tokenization warnings for a cleaner terminal
 warnings.filterwarnings("ignore")
 
 model = SentenceTransformer('all-MiniLM-L6-v2')
 
-# --- AUTODELETE LOGIC ---
 db_path = "rag.db"
 if os.path.exists(db_path):
     os.remove(db_path)
     print("Deleted old rag.db file. Building fresh schema...")
-# ------------------------
 
 db = sqlite3.connect(db_path)
 db.enable_load_extension(True)
 sqlite_vec.load(db)
 db.enable_load_extension(False)
 
-# Create fresh tables with the 'source' column
 db.execute('''
     CREATE TABLE documents (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
