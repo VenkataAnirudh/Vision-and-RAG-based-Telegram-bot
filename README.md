@@ -93,15 +93,15 @@ Ollama is the local LLM runtime that serves the `phi3` model.
    ```
 3. Keep Ollama **running in the background** whenever you use the bot.  
    On Windows it runs as a system tray icon after install.  
-   Verify it is running: `ollama list` — you should see `phi3` listed.
+   Verify it is running: `ollama list` - you should see `phi3` listed.
 
 ### 4. A Telegram Bot Token
 1. Open Telegram and message `@BotFather`.
 2. Send `/newbot` and follow the prompts.
-3. Copy the token — you will need it in Step 5 below.
+3. Copy the token - you will need it in Step 5 below.
 
 ### 5. (Optional) NVIDIA GPU
-Not required — everything runs on CPU. But inference is significantly faster with a CUDA-capable GPU.  
+Not required - everything runs on CPU. But inference is significantly faster with a CUDA-capable GPU.  
 If you have one, see the **PyTorch CUDA install note** in Step 4 of the setup below.
 
 ---
@@ -116,8 +116,8 @@ Doc Image Helper/
 │   └── Recipes.pdf
 │
 ├── venv/                       ← Python virtual environment (created during setup)
-├── app.py                      ← Main bot — run this to start the bot
-├── ingest.py                   ← PDF ingestion script — run once to build rag.db
+├── app.py                      ← Main bot - run this to start the bot
+├── ingest.py                   ← PDF ingestion script - run once to build rag.db
 ├── rag.db                      ← Auto-generated vector database (do not edit)
 ├── requirements.txt            ← All Python dependencies
 ├── .env                        ← Your Telegram token (created during setup)
@@ -159,7 +159,7 @@ You should see `(venv)` at the start of your terminal prompt.
 
 > **Always activate the venv before running any command in this project.**
 
-### Step 3 — (GPU users only) Install PyTorch with CUDA support
+### Step 3 - (GPU users only) Install PyTorch with CUDA support
 
 > Skip this step if you are using CPU only.
 
@@ -222,7 +222,7 @@ Database generated successfully at rag.db
 > **Every time you add, remove, or replace PDFs in `Documents/`, you must re-run `ingest.py` to rebuild `rag.db`.**  
 > The old `rag.db` is automatically deleted and rebuilt from scratch each time.
 
-### Step 7  Make sure Ollama is running with phi3
+### Step 7 - Make sure Ollama is running with phi3
 
 In a separate terminal (or check your system tray on Windows):
 ```bash
@@ -230,7 +230,7 @@ ollama list
 ```
 You must see `phi3` in the list. If not, run `ollama pull phi3` first.
 
-### Step 8 — Start the bot
+### Step 8 - Start the bot
 
 ```bash
 python app.py
@@ -250,7 +250,7 @@ The bot is now running. Open Telegram and message it `/start`.
 
 ## First-Time Download Warnings
 
-These downloads happen automatically — but only on the **first run**. After that, they are cached locally.
+These downloads happen automatically - but only on the **first run**. After that, they are cached locally.
 
 | Model | Size | When it downloads | Cache location |
 |---|---|---|---|
@@ -258,7 +258,7 @@ These downloads happen automatically — but only on the **first run**. After th
 | `phi3` (LLM via Ollama) | ~2.3 GB | When you run `ollama pull phi3` | Ollama's model store |
 | `moondream2` (vision) | **~3.85 GB** | On your **first `/image` command** in Telegram | `~/.cache/huggingface/` |
 
-### moondream2 vision model — critical notice
+### moondream2 vision model - critical notice
 
 - The 3.85 GB download happens **inside the bot process**, triggered by your first `/image` command.
 - On a typical home connection this takes **20–40 minutes**.
@@ -289,13 +289,13 @@ These downloads happen automatically — but only on the **first run**. After th
 
 Read every point here before reporting a bug.
 
-### Vision model — must use the `moondream` pip package
+### Vision model - must use the `moondream` pip package
 
 moondream2 **broke its HuggingFace `transformers` API** in late 2024. If your `app.py` contains:
 ```python
 from transformers import AutoModelForCausalLM, AutoTokenizer
 ```
-and uses `encode_image()` / `answer_question()` — it will crash. The correct code uses:
+and uses `encode_image()` / `answer_question()` - it will crash. The correct code uses:
 ```python
 import moondream as md
 # ...
@@ -311,7 +311,7 @@ The old pattern `revision="2024-08-26"` in `AutoModelForCausalLM.from_pretrained
 ```
 Exception: data did not match any variant of untagged enum ModelWrapper
 ```
-The `moondream` pip package handles versioning internally — no revision pin needed.
+The `moondream` pip package handles versioning internally - no revision pin needed.
 
 ### `low_cpu_mem_usage=True` requires `accelerate`
 
@@ -340,7 +340,7 @@ If phi3 is not listed: `ollama pull phi3`
 
 When using `/image`, you **must** send the image as a standard Telegram photo:
 - ✅ Tap the 📎 attachment icon → **Gallery/Photos** → select → **Send**
-- ❌ Do NOT tap **File** — Telegram will send it as a Document, which bypasses photo handling and causes a download error
+- ❌ Do NOT tap **File** - Telegram will send it as a Document, which bypasses photo handling and causes a download error
 
 ### rag.db is stale after adding new PDFs
 
@@ -375,7 +375,7 @@ During `/image` processing, a file named `temp_<user_id>.jpg` is created in the 
 | `Exception: data did not match any variant of untagged enum ModelWrapper` | Old transformers path for moondream2 | Switch to the `moondream` pip package (see Critical Catches above) |
 | `ConnectionError` on `/ask` or `/summarize` | Ollama is not running | Start Ollama, verify with `ollama list` |
 | `No relevant info found` for a valid question | `MAX_DISTANCE` threshold too strict or rag.db is outdated | Re-run `ingest.py`; or raise `MAX_DISTANCE` in `app.py` |
-| Vision model stuck at `2%` for 30+ minutes | Normal — first-time 3.85 GB download | Wait. Do not restart. |
+| Vision model stuck at `2%` for 30+ minutes | Normal - first-time 3.85 GB download | Wait. Do not restart. |
 | `numpy` dtype errors | numpy 2.x installed | `pip install "numpy<2.0"` |
 | Bot ignores messages after `/ask` or `/image` | ConversationHandler state issue from a previous crash | Send `/cancel` and try again |
 
