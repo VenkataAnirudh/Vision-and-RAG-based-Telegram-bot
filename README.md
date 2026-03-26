@@ -3,7 +3,6 @@
 A fully **local, privacy-first** Telegram bot that answers questions from your own PDF documents and analyses uploaded images with zero cloud AI calls. All inference runs on your own machine.
 
 > Built with: `sqlite-vec` · `sentence-transformers` · `Ollama / phi3` · `moondream2` · `python-telegram-bot`
-
 ---
 
 ## Table of Contents
