@@ -52,8 +52,7 @@ def get_vision_model():
         print("Vision model ready.")
     return _vision_model, _vision_tokenizer
 
-
-MAX_DISTANCE = 1.25
+MAX_DISTANCE = 1.23
 TOP_K = 5
 
 KNOWN_TOPICS = "Recipes, F1 Rulebook, and Trading"
